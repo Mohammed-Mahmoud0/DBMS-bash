@@ -12,6 +12,7 @@ while true; do
     echo "5- Exit "
     read -p "Enter your choice: " choice
 
+    clear
     case $choice in
         1)
             read -p "Enter database name: " database_name
@@ -38,7 +39,7 @@ while true; do
 		    echo "3- Drop Table"
 		    echo "4- Back to Main Menu"
 		    read -p "Enter your choice: " db_choice
-
+		    clear
 		    case $db_choice in
 		        1)
 		            ls "$database_dir"
