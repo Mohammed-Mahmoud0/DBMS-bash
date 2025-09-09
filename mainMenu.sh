@@ -27,15 +27,45 @@ while true; do
             ls -d *"$base_dir" 2>/dev/null || echo "No databases found"
             ;;
         3)
-            read -p "Enter database name to connect: " database_name
-            database_dir="${database_name}${base_dir}"
-            if [ -d "$database_dir" ]; then
-                cd "$database_dir"
-                echo "Connected to $database_dir"
-            else
-                echo "Database not found"
-            fi
-            ;;
+	    read -p "Enter database name to connect: " database_name
+	    database_dir="${database_name}${base_dir}"
+	    if [ -d "$database_dir" ]; then
+		echo "Connected to $database_dir"
+		while true; do
+		    echo "      Database Menu ($database_name)"
+		    echo "1- List Tables"
+		    echo "2- Create Table"
+		    echo "3- Drop Table"
+		    echo "4- Back to Main Menu"
+		    read -p "Enter your choice: " db_choice
+
+		    case $db_choice in
+		        1)
+		            ls "$database_dir"
+		            ;;
+		        2)
+		            read -p "Enter table name: " table
+		            touch "$database_dir/$table"
+		            echo "Table created"
+		            ;;
+		        3)
+		            read -p "Enter table name to drop: " table
+		            rm -f "$database_dir/$table"
+		            echo "Table dropped"
+		            ;;
+		        4)
+		            break
+		            ;;
+		        *)
+		            echo "Invalid choice"
+		            ;;
+		    esac
+		done
+	    else
+		echo "Database not found"
+	    fi
+	    ;;
+
         4)
             read -p "Enter database name to drop: " database_name
             database_dir="${database_name}${base_dir}"
