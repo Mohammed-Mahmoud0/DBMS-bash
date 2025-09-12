@@ -52,14 +52,22 @@ connect_to_database(){
 	    echo "1- Create Table"
 	    echo "2- List Tables"
 	    echo "3- Drop Table"
-	    echo "4- Back to Main Menu"
+	    echo "4- Insert Into Table"
+	    echo "5- Select From Table"
+	    echo "6- Delete From Table"
+	    echo "7- Update Table"
+	    echo "8- Back to Main Menu"
 	    read -p "Enter your choice: " db_choice
 	    clear
 	    case $db_choice in
 	        1) create_table "$database_dir" ;;	            
 	        2) list_tables "$database_dir" ;;	            
-	        3) drop_table "$database_dir" ;;	            
-	        4) break ;;           
+	        3) drop_table "$database_dir" ;;
+	        4) insert_into_table ;;  
+	        5) select_from_table ;;
+	        6) delete_from_table ;;
+	        7) update_table ;;          
+	        8) break ;;           
 	        *) echo "Invalid choice" ;; 
 	    esac
 	done
@@ -109,6 +117,22 @@ drop_table() {
 	else
 		echo "Table $table not found"
 	fi
+}
+
+insert_into_table(){
+	echo "insert not implemented yet"
+}
+
+select_from_table(){
+	echo "select not implemented yet"
+}
+
+delete_from_table(){
+	echo "delete not implemented yet"
+}
+
+update_table(){
+	echo "update not implemented yet"
 }
 
 base_dir=".db"
