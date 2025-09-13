@@ -1,1 +1,1 @@
-13 سبت, 2025 EEST 05:51:09 م: Deleted row 2 from emp
+ Deleted row 2 from emp

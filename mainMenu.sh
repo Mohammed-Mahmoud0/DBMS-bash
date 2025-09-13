@@ -91,9 +91,8 @@ drop_database(){
 
 # database functions (when connect to database)
 create_table() {
-    local database_dir=$1
     read -p "Enter table name: " table
-    local table_path="$database_dir/$table"
+    local table_path="$table"
 	local meta_path="$table_path.meta"
 	
 	if [ -e "$table_path" ] || [ -e "$meta_path" ]; then
@@ -171,22 +170,21 @@ create_table() {
 }
 
 list_tables() {
-    local database_dir=$1
-    if [ ! -d "$database_dir" ]; then
+    if [ ! -d "$PWD" ]; then
         echo "Database not found"
-    elif [ -z "$(ls -A "$database_dir")" ]; then
+    elif [ -z "$(ls -A "$PWD")" ]; then
         echo "No Tables Created Yet"
     else
-        ls "$database_dir"
+        ls | grep -vE '\.meta$|\.txt$'
     fi
 	
 }
 
 drop_table() {
-    local database_dir=$1
     read -p "Enter table name to drop: " table
-    if [ -f "$database_dir/$table" ]; then
-    	rm -f "$database_dir/$table"
+    if [ -f "$table" ]; then
+    	rm -f "$table"
+    	rm -f "$table.meta"
     	echo "Table dropped"
 	else
 		echo "Table $table not found"
