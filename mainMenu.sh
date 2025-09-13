@@ -92,8 +92,81 @@ drop_database(){
 create_table() {
     local database_dir=$1
     read -p "Enter table name: " table
-    touch "$database_dir/$table"
-    echo "Table created"
+    local table_path="$database_dir/$table"
+	local meta_path="$table_path.meta"
+	
+	if [ -e "$table_path" ] || [ -e "$meta_path" ]; then
+        echo "Table already exists."
+        return 1
+    fi
+    
+    local num_cols
+    read -p "Number of Columns: " num_cols
+    
+    local -a col_names col_types col_pks
+    local pk_set=0
+    
+    for ((i=1; i<=num_cols; i++)); do
+    	while true; do
+    		read -p "Name Of Column #$i: " colname
+    		local check_dup=0
+    		for name in "${col_names[@]}"; do
+    			if [ "$name" = "$colname" ]; then
+    				check_dup=1; break
+				fi
+			done
+			if [ $check_dup -eq 1 ]; then
+				echo "Column name '$colname' already exist. write another pls"
+				continue
+			fi
+			col_names+=("$colname")
+			break
+		done
+		
+		while true; do
+			read -p "Enter Datatype for '$colname' (int/string) string is the default: " datatype
+			datatype="${datatype:-string}"
+			datatype="${datatype,,}"
+			if [[ "$datatype" = "int" || "$datatype" = "string" ]]; then
+				col_types+=("$datatype")
+				break
+			else
+				echo "Please Choose From Allowed datatypes: int, string"
+			fi
+		done
+		
+		while true; do
+			read -p "Do You want to make '$colname' Primary Key (y/n) n is the default: " ans
+			ans="${ans:-n}"
+			case "${ans,,}" in
+				y)
+					if [ $pk_set -eq 1 ]; then
+						echo "Primary key already set on another column. Only one PK allowed, choose another pls"
+		                continue
+		            fi
+		            col_pks+=("pk")
+		            pk_set=1
+		            break
+		            ;;
+		        n)
+		        	col_pks+=("nokey")
+		        	break
+		        	;;
+		    	*) echo "please enter y or n" ;;
+	    	esac
+    	done
+	done
+	
+	touch "$meta_path"
+	for idx in "${!col_names[@]}"; do
+		echo "${col_names[$idx]}:${col_types[$idx]}:${col_pks[$idx]}" >> "$meta_path"
+	done
+	
+	touch "$table_path"
+	
+	echo "Table '$table' Created successfully."
+	echo "You can find the schema in: $meta_path"
+	return 0
 }
 
 list_tables() {
