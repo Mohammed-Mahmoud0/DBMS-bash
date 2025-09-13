@@ -46,6 +46,7 @@ connect_to_database(){
 	read -p "Enter database name to connect: " database_name
 	database_dir="${database_name}${base_dir}"
     if [ -d "$database_dir" ]; then
+	cd "$database_dir" 
 	echo "Connected to $database_dir"
 	while true; do
 	    echo "      Database Menu ($database_name)"
@@ -201,12 +202,91 @@ select_from_table(){
 }
 
 delete_from_table(){
-	echo "delete not implemented yet"
+	
+	echo "Delete From Table"
+
+    while true; do
+        echo "Available tables:"
+        ls  2>/dev/null
+        read -p "Enter the table name to delete from:" table_name
+
+        # Ensure the table name input is valid
+        if [[ -z "$table_name" || ! "$table_name" =~ ^[a-zA-Z0-9_]+$ ]]; then
+            echo "Invalid name ."
+            continue
+        fi
+        
+        if [ -f "$table_name" ]; then
+            break
+        else
+            echo "Error: Table $table_name does not exist."
+            continue
+        fi
+    done
+    
+    while true; do
+        echo " table $table_name Contains :"
+        
+        # Display the table with row numbers
+        nl -w 3 -s '. ' "$table_name"
+        
+        read  -p " Enter the row number to delete: " row_number
+        
+        # Validate that the row number is a positive integer
+        if [[ ! "$row_number" =~ ^[0-9]+$ ]] || [ "$row_number" -lt 1 ]; then
+            echo "Invalid row number."
+            continue
+        fi
+        
+        # Check if the row number is within the range of existing rows
+        total_rows=$(wc -l < "$table_name")
+        
+        # Check for empty tables
+        if [ "$total_rows" -eq 0 ]; then
+            echo "The table $table_name is empty. No rows to delete."
+            continue
+        fi
+        if [ "$row_number" -gt "$total_rows" ]; then
+            echo "Row number $row_number is out of range. The table has $total_rows rows."
+            continue
+        fi
+
+        # Prevent deletion of rows 1 
+        if [ "$row_number" -eq 1 ] ; then
+            echo "Row 1 cannot be deleted. "
+            continue
+        fi
+
+        # Preview the row to delete
+        echo "Preview of row to delete:"
+        sed -n "${row_number}p" "$table_name"
+        
+        # Confirm deletion
+        while true; do
+            read -p "Are you sure you want to delete row $row_number? (yes/no) " confirm
+            
+            if echo "$confirm" | grep -iq "^yes$"; then   
+		# Delete the specified row
+                sed -i "${row_number}d" "$table_name"
+                echo "Row $row_number has been deleted from $table_name."
+                echo " Deleted row $row_number from $table_name" >> delete_log.txt
+                break
+            elif echo "$confirm" | grep -iq "^no$"; then
+                echo "Deletion canceled."
+                break
+            else
+                echo "Invalid response. Please enter 'yes' or 'no'."
+            fi
+        done
+
+        break
+    done
 }
 
 update_table(){
 	echo "update not implemented yet"
 }
+
 
 base_dir=".db"
          
