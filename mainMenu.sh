@@ -192,7 +192,80 @@ drop_table() {
 }
 
 insert_into_table(){
-	echo "insert not implemented yet"
+	local database_dir="$PWD"
+	read -r -p "Enter table name to insert into: " table
+	local table_path="$database_dir/$table"
+	local meta_path="$table_path.meta"
+	
+	if [ ! -f "$meta_path" ] || [ ! -f "$table_path" ]; then
+        echo "Table or meta file not found. Make sure the table exists."
+        return 1
+    fi
+    
+    local -a col_names col_types col_pks
+    while IFS=':' read -r cname ctype cpk; do
+        col_names+=("$cname")
+        col_types+=("$ctype")
+        col_pks+=("$cpk")
+    done < "$meta_path"
+    
+    local num_cols=${#col_names[@]}
+    if [ "$num_cols" -eq 0 ]; then
+        echo "Empty schema,try to delete table and create it again. Aborting..."
+        return 1
+    fi
+    
+    local pk_index=-1
+    for i in "${!col_pks[@]}"; do
+        if [ "${col_pks[$i]}" = "pk" ]; then
+            pk_index=$i
+            break
+        fi
+    done
+    
+    local -a values
+    for i in $(seq 0 $((num_cols-1))); do
+        local cname="${col_names[$i]}"
+        local ctype="${col_types[$i]}"
+        
+    	while true; do
+            read -r -p "Enter value for '${cname}' (${ctype}): " val
+
+            if [ -z "$val" ]; then
+                echo "Value cannot be empty. Try again."
+                continue
+            fi
+            
+            if [[ "$val" == *"|"* ]]; then
+                echo "Character '|' is not valid because it reserved as field separator."
+                continue
+            fi
+
+            if [ "$ctype" = "int" ]; then
+                if ! [[ "$val" =~ ^-?[0-9]+$ ]]; then
+                    echo "Invalid integer. Try again."
+                    continue
+                fi
+            fi
+
+            if [ "$i" -eq "$pk_index" ]; then
+    			if awk -F'|' -v c="$((i+1))" -v v="$val" '$c==v {found=1; exit} END{exit !found}' "$table_path"; then
+        			echo "Primary key value '$val' already exists. Enter a unique value."
+        			continue
+    			fi
+			fi
+
+            values+=("$val")
+            break
+        done
+    done
+    
+    local row
+    row=$(IFS="|"; echo "${values[*]}")
+
+    echo "$row" >> "$table_path"
+    echo "Row inserted successfully into '$table'."
+    return 0
 }
 
 select_from_table(){

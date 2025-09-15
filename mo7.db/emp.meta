@@ -1,1 +1,2 @@
-id:string:nokey
+id:int:pk
+name:string:nokey
