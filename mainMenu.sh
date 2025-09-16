@@ -3,27 +3,30 @@
 
 # main menu functions
 main_menu(){
-    clear
     while true; do
-    echo "      Main Menu "
-    echo "1- Create Database "
-    echo "2- List Databases "
-    echo "3- Connect to Database "
-    echo "4- Drop Database "
-    echo "5- Exit "
-    read -p "Enter your choice: " choice
-    clear
-    case $choice in
-    	1) create_database ;;
-    	2) list_databases ;;
-    	3) connect_to_database ;;
-		4) drop_database ;;
-		5)
-			echo "Good Bye"
-			break
-			;;
-	    *) echo "Choose a valid number" ;;		        	        
-    esac
+		choice=$(zenity --list \
+			--title="Main Menu" \
+			--text="Choose an option:" \
+			--radiolist \
+			--column="Select" --column="Option" \
+			True "Create Database" \
+			False "List Databases" \
+			False "Connect to Database" \
+			False "Drop Database" \
+			False "Exit" \
+			--width=400 --height=300)
+    
+		case $choice in
+			"Create Database") create_database ;;
+			"List Databases") list_databases ;;
+			"Connect to Database") connect_to_database ;;
+			"Drob Database") drop_database ;;
+			"Exit")
+				zenity --info --text="Good Bye"
+				break
+				;;
+			*) zenity --info --text="Choose a valid number" ;;		        	        
+		esac
 	done
 }
 
