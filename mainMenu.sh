@@ -67,6 +67,8 @@ list_databases(){
 
 connect_to_database(){
 
+	local start_dir="$PWD"
+
 	databases=$(find . -maxdepth 1 -type d -name "*.db" -printf "%f\n")
 
     if [ -z "$databases" ]; then
@@ -116,6 +118,8 @@ connect_to_database(){
             *) zenity --error --text="Invalid choice" ;;
 	    esac
 	done
+	
+	cd "$start_dir" || return
 }
 
 drop_database(){
