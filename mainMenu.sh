@@ -272,7 +272,105 @@ insert_into_table(){
 }
 
 select_from_table(){
-	echo "select not implemented yet"
+    selectMenu
+}
+
+function selectMenu {
+    echo "======================================================="
+    echo "     Select Menu for Database Management System        "
+    echo "======================================================="
+    echo " "
+    select x in "1- Select all" "2- select row using PK" "3- select range of rows" "4- exit"
+    do
+        case $REPLY in 
+            1) selectAll; break;;
+            2) selectRow; break;; 
+            3) selectRange; break;;
+            4) break;;
+            *) echo "Invalid choice, try again";;
+        esac
+    done
+
+}
+chooseTable() {
+    local tables=$(list_tables "$database_dir")
+    
+    if [ -z "$tables" ]; then
+        echo "No tables available in this database."
+        return 1
+    fi
+
+    echo "Available tables:"
+    select table in $tables; do
+        if [ -n "$table" ]; then
+            echo "You selected table: $table"
+            echo "$table"   # return table name
+            return 0
+        else
+            echo "Invalid choice, try again."
+        fi
+    done
+}
+
+selectAll() {
+    local table=$(chooseTable) || return
+
+    echo "========== Table: $table =========="
+    cat "$table_path"
+    echo "==================================="
+}
+
+
+selectRow() {
+    local table=$(chooseTable) || return
+    local table_path="$database_dir/$table"
+    local meta_path="$table_path.meta"
+
+    if [ ! -f "$meta_path" ]; then
+        echo "Metadata not found"
+        return
+    fi
+
+    local pk_col=$(grep -n ":pk" "$meta_path" | cut -d: -f1)
+    if [ -z "$pk_col" ]; then
+        echo "No primary key defined for this table"
+        return
+    fi
+
+    read -p "Enter value for primary key: " pk_value
+
+    awk -F"|" -v col="$pk_col" -v val="$pk_value" '
+        $col == val { print; found=1 }
+        END { if (!found) print "No row found with PK=" val }
+    ' "$table_path"    
+
+}
+
+selectRange() {
+    local table=$(chooseTable) || return
+    local table_path="$database_dir/$table"
+
+
+    local total_lines=$(wc -l < "$table_path")
+    if [ "$total_lines" -eq 0 ]; then
+        echo "Table is empty"
+        return
+    fi
+
+    echo "Write a valid range from 1 to $total_lines (example: 1 5)"
+    read start end
+
+    if ! [[ "$start" =~ ^[0-9]+$ && "$end" =~ ^[0-9]+$ ]]; then
+        echo "Invalid input, must be numbers"
+        return
+    fi
+
+    if [ "$start" -lt 1 ] || [ "$end" -gt "$total_lines" ] || [ "$start" -gt "$end" ]; then
+        echo "Invalid range"
+        return
+    fi
+
+    sed -n "${start},${end}p" "$table_path"
 }
 
 delete_from_table(){
@@ -358,7 +456,58 @@ delete_from_table(){
 }
 
 update_table(){
-	echo "update not implemented yet"
+    echo "Update From Table"
+
+    while true; do
+        echo "Available tables:"
+        ls 2>/dev/null
+        read -p "Enter the table name to update: " table_name
+
+        if [[ -z "$table_name" || ! "$table_name" =~ ^[a-zA-Z0-9_]+$ ]]; then
+            echo "Invalid name."
+            continue
+        fi
+
+        if [ -f "$table_name" ]; then
+            break
+        else
+            echo "Error: Table $table_name does not exist."
+            continue
+        fi
+    done
+
+    if [ ! -s "$table_name" ]; then
+        echo "The table $table_name is empty. Nothing to update."
+        return
+    fi
+
+    echo "Table $table_name contents:"
+    nl -w 3 -s '. ' "$table_name"
+
+    read -p "Enter the row number to update: " row_number
+    total_rows=$(wc -l < "$table_name")
+
+    if [[ ! "$row_number" =~ ^[0-9]+$ ]] || [ "$row_number" -lt 1 ] || [ "$row_number" -gt "$total_rows" ]; then
+        echo "Invalid row number."
+        return
+    fi
+
+    echo "Selected row:"
+    sed -n "${row_number}p" "$table_name"
+
+    read -p "Enter the word you want to replace: " old_word
+    read -p "Enter the new word: " new_word
+
+    if [ -z "$old_word" ] || [ -z "$new_word" ]; then
+        echo "Old and new values cannot be empty."
+        return
+    fi
+
+    sed -i "${row_number}s/${old_word}/${new_word}/g" "$table_name"
+
+    echo "Row updated successfully!"
+    echo "Updated row:"
+    sed -n "${row_number}p" "$table_name"
 }
 
 
