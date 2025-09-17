@@ -1,1 +1,3 @@
- Deleted row 2 from emp
+Deleted row 2 from emp
+Deleted row 1 from emp
+Deleted row 2 from emp
