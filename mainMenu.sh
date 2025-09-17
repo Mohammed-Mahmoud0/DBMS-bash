@@ -410,25 +410,24 @@ select_from_table_menu() {
 
 
 chooseTable() {
-    local tables
-    tables=$(list_tables)
+    tables=$(ls -1 | grep -vE '\.meta$|\.txt$')
 
     if [ -z "$tables" ]; then
         zenity --warning --text="No tables available in this database."
         return 1
     fi
 
-    CHOSEN_TABLE=$(echo "$tables" | awk '{print "FALSE", $0}' | zenity --list \
-    --title="Choose Table" \
-    --text="Select a table:" \
-    --radiolist \
-    --column="Select" --column="Table Name" \
-    --width=400 --height=300)
-
+    CHOSEN_TABLE=$(echo "$tables" | zenity --list \
+        --title="Choose Table" \
+        --text="Select a table:" \
+        --column="Table Name" \
+        --width=400 --height=300)
 
     [ -z "$CHOSEN_TABLE" ] && return 1
     return 0
 }
+
+
 
 
 selectAll() {
