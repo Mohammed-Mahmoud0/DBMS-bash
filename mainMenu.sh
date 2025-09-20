@@ -606,6 +606,13 @@ update_table() {
     fi
 
     old_row=$(sed -n "${row_number}p" "$table_name")
+
+    meta_path="$table_name.meta"
+    pk_col=$(grep -n ":pk" "$meta_path" | cut -d: -f1)
+    if [ -z "$pk_col" ]; then
+        pk_col=""
+    fi
+
     old_word=$(zenity --entry \
         --title="Old Value" \
         --text="Enter the word you want to replace in row $row_number:\n\n$old_row")
@@ -622,6 +629,16 @@ update_table() {
     if [ -z "$new_word" ]; then
         zenity --error --text="New value cannot be empty."
         return 1
+    fi
+
+    if [ -n "$pk_col" ]; then
+        pk_value=$(echo "$old_row" | awk -F'|' -v col="$pk_col" '{print $col}')
+        if [ "$old_word" = "$pk_value" ]; then
+            if awk -F'|' -v col="$pk_col" -v val="$new_word" -v rn="$row_number" 'NR!=rn && $col==val {found=1; exit} END{exit !found}' "$table_name"; then
+                zenity --error --text="Primary key value '$new_word' already exists in another row. PK must be unique."
+                return 1
+            fi
+        fi
     fi
 
     sed -i "${row_number}s/${old_word}/${new_word}/g" "$table_name"
